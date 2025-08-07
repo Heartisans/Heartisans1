@@ -253,6 +253,31 @@ Comprehensive insights including:
 
 ---
 
+## 📷 Screenshots
+
+<div align="center">
+
+### 🏠 Homepage & Hero Section
+<img src="./frontend/public/photos/hero.png" alt="Heartisans Homepage" width="800" style="border-radius: 10px; margin: 10px 0;"/>
+
+*Beautiful hero section showcasing handcrafted treasures*
+
+### 🛍️ Product Catalog & Shop
+<img src="./frontend/public/photos/shop1.png" alt="Product Catalog" width="800" style="border-radius: 10px; margin: 10px 0;"/>
+<img src="./frontend/public/photos/shop2.png" alt="Product Catalog" width="800" style="border-radius: 10px; margin: 10px 0;"/>
+<img src="./frontend/public/photos/shop3.png" alt="Product Catalog" width="800" style="border-radius: 10px; margin: 10px 0;"/>
+
+*Comprehensive product catalog with advanced filtering*
+
+### 🏺 Live Auction Experience
+<img src="./frontend/public/photos/auction.png" alt="Live Auction" width="800" style="border-radius: 10px; margin: 10px 0;"/>
+
+*Real-time bidding with WebSocket-powered updates*
+
+</div>
+
+---
+
 ## 🔧 Development Tools
 
 ### Available Scripts
