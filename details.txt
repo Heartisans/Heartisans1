@@ -9,3 +9,26 @@ Auction Card
 Cloudinary
 
 #479626
+
+
+React 18 + Vite
+├── React Router DOM (Navigation)
+├── Tailwind CSS (Styling)
+├── Axios (HTTP Client)
+├── Socket.io Client (Real-time)
+├── React i18next (Internationalization)
+└── Context API (State Management)
+```
+
+### Backend Stack
+```
+Node.js + Express
+├── MongoDB + Mongoose (Database)
+├── Socket.io (WebSocket)
+├── Cloudinary (Image Storage)
+├── Cashfree (Payment Gateway)
+├── JWT (Authentication)
+├── Multer (File Upload)
+├── bcryptjs (Password Hashing)
+└── Nodemailer (Email Service)
+```
