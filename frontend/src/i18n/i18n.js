@@ -52,6 +52,7 @@ const resources = {
       "auth.confirmPassword": "Confirm Password",
       "auth.forgotPassword": "Forgot Password?",
       "auth.rememberMe": "Remember me",
+      "auth.loginToAddCart": "Please login to add items to cart",
       
       // Dashboard
       "dashboard.welcome": "Welcome",
@@ -489,6 +490,7 @@ const resources = {
       "auth.confirmPassword": "पासवर्ड की पुष्टि करें",
       "auth.forgotPassword": "पासवर्ड भूल गए?",
       "auth.rememberMe": "मुझे याद रखें",
+      "auth.loginToAddCart": "कार्ट में आइटम जोड़ने के लिए कृपया लॉगिन करें",
       
       // Dashboard
       "dashboard.welcome": "स्वागत है",
@@ -904,6 +906,7 @@ const resources = {
       "auth.confirmPassword": "পাসওয়ার্ড নিশ্চিত করুন",
       "auth.forgotPassword": "পাসওয়ার্ড ভুলে গেছেন?",
       "auth.rememberMe": "আমাকে মনে রাখুন",
+      "auth.loginToAddCart": "কার্টে আইটেম যোগ করতে দয়া করে লগইন করুন",
       
       // Dashboard
       "dashboard.welcome": "স্বাগতম",
@@ -1319,6 +1322,7 @@ const resources = {
       "auth.confirmPassword": "கடவுச்சொல்லை உறுதிப்படுத்து",
       "auth.forgotPassword": "கடவுச்சொல் மறந்துவிட்டதா?",
       "auth.rememberMe": "என்னை நினைவில் வைத்துக் கொள்",
+      "auth.loginToAddCart": "கார்ட்டில் பொருட்களைச் சேர்க்க தயவுசெய்து உள்நுழையவும்",
       
       // Dashboard
       "dashboard.welcome": "வரவேற்கிறோம்",
@@ -1734,6 +1738,7 @@ const resources = {
       "auth.confirmPassword": "పాస్‌వర్డ్‌ను నిర్ధారించండి",
       "auth.forgotPassword": "పాస్‌వర్డ్ మర్చిపోయారా?",
       "auth.rememberMe": "నన్ను గుర్తుంచుకోండి",
+      "auth.loginToAddCart": "కార్ట్‌కు వస్తువులను జోడించడానికి దయచేసి లాగిన్ చేయండి",
       
       // Dashboard
       "dashboard.welcome": "స్వాగతం",

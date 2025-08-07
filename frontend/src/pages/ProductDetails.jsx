@@ -224,8 +224,24 @@ export const ProductDetails = () => {
                     </p>
                   </div>
                   
-                  {/* Action Button */}
-                  <div className="pt-4">
+                  {/* Action Buttons */}
+                  <div className="pt-4 space-y-4">
+                    {/* Add to Cart / Remove from Cart Button */}
+                    {!isUserSeller && user && (
+                      <button 
+                        className={`w-full py-4 px-8 rounded-xl text-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
+                          inCart 
+                            ? 'bg-red-500 hover:bg-red-600 text-white' 
+                            : 'text-white'
+                        }`}
+                        style={!inCart ? { backgroundColor: '#479626' } : {}}
+                        onClick={inCart ? handleRemoveFromCart : handleAddToCart}
+                      >
+                        {inCart ? t('product.removeFromCart') : t('product.addToCart')}
+                      </button>
+                    )}
+                    
+                    {/* Buy Now Button */}
                     <button 
                       className={`w-full py-4 px-8 rounded-xl text-xl font-bold transition-all duration-300 transform hover:scale-105 ${
                         isUserSeller 
@@ -239,6 +255,19 @@ export const ProductDetails = () => {
                     >
                       {isUserSeller ? t('dashboard.yourProduct') : t('product.buyNow')}
                     </button>
+                    
+                    {/* Login prompt for non-authenticated users */}
+                    {!user && (
+                      <div className="text-center mt-4">
+                        <p className="text-gray-600 mb-2">{t('auth.loginToAddCart')}</p>
+                        <button 
+                          className="text-blue-600 hover:text-blue-800 font-semibold"
+                          onClick={() => navigate('/login')}
+                        >
+                          {t('auth.login')}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
