@@ -347,8 +347,6 @@ Language files are located in `frontend/src/i18n/` with easy expansion for addit
 
 We're grateful to all contributors who have helped make Heartisans a reality. Every contribution, from code to feedback, helps preserve and promote traditional artisanship.
 
-**Want to join our team?** We're always looking for passionate developers, designers, and artisan advocates. Check out our [Contributing Guidelines](#-contributing) to get started!
-
 </div>
 
 ---
