@@ -1,14 +1,13 @@
-import { TeamCard } from "../components/elements/TeamCard";
+// import { TeamCard } from "../components/elements/TeamCard";
 import { teamMembers } from "../constants/constants";
 
 export const Teams = () => {
+  /*
   // Sample team data - replace with actual team information
-
 
   return (
     <>
       <section className="font-mhlk">
-        {/* Header Section */}
         <div className="w-full py-16 md:py-20 bg-[#eee]">
           <div className="text-center mb-16">
             <h1 className="text-[12vw] md:text-[8vw] lg:text-[5vw] text-center leading-tight mb-8">
@@ -19,7 +18,6 @@ export const Teams = () => {
             </p>
           </div>
 
-          {/* Team Cards Grid */}
           <div className="max-w-8xl mx-auto px-6 md:px-8 lg:px-12">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 lg:gap-12">
               {teamMembers.map((member) => (
@@ -38,4 +36,7 @@ export const Teams = () => {
       </section>
     </>
   );
+  */
+
+  return null;
 };
