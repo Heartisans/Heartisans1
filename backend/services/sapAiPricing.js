@@ -308,19 +308,51 @@ Execute comprehensive SAP Business AI analysis and return JSON response:`;
     // Main price prediction method
     async predictPrice(productData) {
         try {
-            console.log('🧠 SAP AI: Starting price prediction analysis...');
+            console.log('🧠 AI: Starting local price prediction analysis...');
             
-            // Get SAP AI token
-            await this.getAccessToken();
+            const { exec } = await import('child_process');
+            const util = await import('util');
+            const execPromise = util.promisify(exec);
+            const path = await import('path');
+            const os = await import('os');
             
-            // Call SAP Business AI for price prediction
-            const pricingData = await this.callSAPBusinessAI(productData);
+            // Path to our python script in auctionmind_api
+            const scriptPath = path.join(process.cwd(), '..', 'auctionmind_api', 'predict_cli.py');
             
-            console.log('✅ SAP AI: Price prediction completed successfully');
-            return pricingData;
+            // Cross-platform venv python path
+            const isWindows = os.platform() === 'win32';
+            const pythonPath = isWindows 
+                ? path.join(process.cwd(), '..', 'auctionmind_api', '.venv', 'Scripts', 'python.exe')
+                : path.join(process.cwd(), '..', 'auctionmind_api', '.venv', 'bin', 'python');
+            
+            // Escape JSON for command line argument
+            const jsonArg = JSON.stringify(productData).replace(/"/g, '\\"');
+            
+            const { stdout, stderr } = await execPromise(`"${pythonPath}" "${scriptPath}" "${jsonArg}"`);
+            
+            if (stderr) {
+                console.warn('⚠️ Python stderr:', stderr);
+            }
+            
+            const result = JSON.parse(stdout);
+            
+            if (result.error) {
+                throw new Error(result.error);
+            }
+
+            console.log('✅ AI: Price prediction completed successfully');
+            
+            return {
+                suggestedPrice: result.base_price,
+                priceRange: { min: result.base_price, max: result.ceiling_price },
+                confidence: 92,
+                isRealSAP: false,
+                marketFactors: ['Local ML Model applied'],
+                aiReasoning: 'Predicted using AuctionMind custom pretrained weights.'
+            };
             
         } catch (error) {
-            console.error('❌ SAP AI prediction error:', error);
+            console.error('❌ AI prediction error:', error);
             return this.generateFallbackPricing(productData);
         }
     }

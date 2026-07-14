@@ -25,3 +25,15 @@ dist-ssr
 .env
 backend/uploads/
 backend/test-db.js
+
+# Python / Machine Learning
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# Allow model checkpoints specifically so partners can pull pretrained weights
+!auctionmind_api/checkpoints/

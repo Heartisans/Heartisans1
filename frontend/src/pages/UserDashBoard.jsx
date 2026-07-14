@@ -17,7 +17,7 @@ const SellerEarningsSection = ({ userId }) => {
     try {
       setLoading(true);
       const response = await axios.get(`http://localhost:5000/api/user/earnings/${userId}`);
-      
+
       // Ensure numbers are properly formatted
       const formattedEarnings = {
         ...response.data,
@@ -25,7 +25,7 @@ const SellerEarningsSection = ({ userId }) => {
         currentBalance: Number(response.data.currentBalance || 0),
         freePostingRemaining: Math.max(0, 1000 - Number(response.data.totalEarnings || 0))
       };
-      
+
       setEarnings(formattedEarnings);
     } catch (error) {
       console.error('Failed to fetch seller earnings:', error);
@@ -74,7 +74,7 @@ const SellerEarningsSection = ({ userId }) => {
         <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
           💰 Seller Business Model
         </h3>
-        <button 
+        <button
           onClick={fetchEarnings}
           disabled={loading}
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
@@ -90,21 +90,21 @@ const SellerEarningsSection = ({ userId }) => {
               ₹{(earnings.totalEarnings || 0).toLocaleString()}
             </p>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <h4 className="text-lg font-bold text-gray-700 mb-2">Current Balance</h4>
             <p className="text-3xl font-bold text-blue-600">
               ₹{(earnings.currentBalance || 0).toLocaleString()}
             </p>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <h4 className="text-lg font-bold text-gray-700 mb-2">Commission Rate</h4>
             <p className="text-3xl font-bold text-purple-600">
               {earnings.isCommissionActive ? '10%' : '0%'}
             </p>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <h4 className="text-lg font-bold text-gray-700 mb-2">Status</h4>
             <p className={`text-lg font-bold ${earnings.isCommissionActive ? 'text-orange-600' : 'text-green-600'}`}>
@@ -173,6 +173,7 @@ export const UserDashBoard = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [userProducts, setUserProducts] = useState([]);
   const [userResaleListings, setUserResaleListings] = useState([]);
+  const [auctionRequests, setAuctionRequests] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showArtisanPlanModal, setShowArtisanPlanModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -182,7 +183,7 @@ export const UserDashBoard = () => {
   const navigate = useNavigate();
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateMessage, setUpdateMessage] = useState("");
-  
+
   // Add these new state variables for video modals
   const [showSellVideo, setShowSellVideo] = useState(false);
   const [showResaleVideo, setShowResaleVideo] = useState(false);
@@ -212,7 +213,7 @@ export const UserDashBoard = () => {
       try {
         setLoadingUser(true);
         const userRes = await axios.get(`http://localhost:5000/api/user/${id}`);
-        
+
         // Verify the fetched user matches the authenticated user
         if (userRes.data._id !== authUser?._id) {
           signOut();
@@ -224,12 +225,12 @@ export const UserDashBoard = () => {
         // Fetch user's resale listings
         try {
           const token = localStorage.getItem('authToken');
-          
+
           if (!token) {
             setUserResaleListings([]);
             return;
           }
-          
+
           const resaleRes = await axios.get(`http://localhost:5000/api/resale/user/listings`, {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -238,11 +239,11 @@ export const UserDashBoard = () => {
           setUserResaleListings(resaleRes.data.data || resaleRes.data);
         } catch (error) {
           console.error('Failed to fetch resale listings:', error.response?.data || error.message);
-          
+
           // If the protected route fails, try to fetch all listings and filter by user
           try {
             const allListingsRes = await axios.get('http://localhost:5000/api/resale');
-            const userListings = allListingsRes.data.data?.filter(listing => 
+            const userListings = allListingsRes.data.data?.filter(listing =>
               listing.seller?._id === userRes.data._id || listing.seller === userRes.data._id
             ) || [];
             setUserResaleListings(userListings);
@@ -258,7 +259,7 @@ export const UserDashBoard = () => {
             console.log('All products from API:', productsRes.data);
             console.log('Current user ID:', userRes.data._id);
             console.log('Current user name:', userRes.data.userName);
-            
+
             const userProducts = productsRes.data.filter(product => {
               console.log('Checking product:', {
                 productName: product.productName,
@@ -267,24 +268,24 @@ export const UserDashBoard = () => {
                 sellerIdType: typeof product.sellerId,
                 userIdType: typeof userRes.data._id
               });
-              
+
               // Primary check: sellerId (most reliable after our fix)
-              const matchesSellerId = product.sellerId && 
-                (product.sellerId === userRes.data._id || 
-                 product.sellerId.toString() === userRes.data._id.toString());
-              
+              const matchesSellerId = product.sellerId &&
+                (product.sellerId === userRes.data._id ||
+                  product.sellerId.toString() === userRes.data._id.toString());
+
               // Fallback check: seller name (for any remaining edge cases)
               const matchesSellerName = product.productSellerName === userRes.data.userName;
-              
+
               const isMatch = matchesSellerId || matchesSellerName;
               console.log('Match result:', isMatch, {
                 matchesSellerId,
                 matchesSellerName
               });
-              
+
               return isMatch;
             });
-            
+
             console.log('Filtered user products:', userProducts);
             setUserProducts(userProducts);
             if (userProducts.length > 0) {
@@ -293,6 +294,14 @@ export const UserDashBoard = () => {
           } catch (error) {
             console.error('Failed to fetch user products:', error);
             setUserProducts([]);
+          }
+
+          try {
+            const auctionReqRes = await axios.get(`http://localhost:5000/api/auction-requests/user/${userRes.data._id}`);
+            setAuctionRequests(auctionReqRes.data.data || auctionReqRes.data);
+          } catch (err) {
+            console.error("Failed to fetch auction requests", err);
+            setAuctionRequests([]);
           }
         }
       } catch (error) {
@@ -392,7 +401,7 @@ export const UserDashBoard = () => {
       console.error("Error status:", error.response?.status);
 
       let errorMessage = "Failed to update product. Please try again.";
-      
+
       if (error.response?.status === 404) {
         errorMessage = "Product not found. It may have been deleted.";
       } else if (error.response?.status === 400) {
@@ -404,7 +413,7 @@ export const UserDashBoard = () => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       setUpdateMessage(`Failed to update: ${errorMessage}`);
     }
     setUpdateLoading(false);
@@ -603,6 +612,11 @@ export const UserDashBoard = () => {
                   label: t("dashboard.quickActions") || "Quick Actions",
                   icon: "⚡",
                 },
+                {
+                  id: "request-status",
+                  label: "Request Status",
+                  icon: "📝",
+                },
               ].map(
                 (tab) =>
                   (!tab.artisanOnly || user.isArtisan) && (
@@ -634,7 +648,7 @@ export const UserDashBoard = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* How to Sell Button */}
-                <button 
+                <button
                   onClick={() => setShowSellVideo(true)}
                   className="bg-gradient-to-br from-green-50 to-emerald-100 hover:from-green-100 hover:to-emerald-200 border-2 border-green-200 rounded-2xl p-6 text-center transition-all duration-300 transform hover:scale-105 cursor-pointer"
                 >
@@ -644,7 +658,7 @@ export const UserDashBoard = () => {
                 </button>
 
                 {/* How to Start Resale Button */}
-                <button 
+                <button
                   onClick={() => setShowResaleVideo(true)}
                   className="bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-2 border-blue-200 rounded-2xl p-6 text-center transition-all duration-300 transform hover:scale-105 cursor-pointer"
                 >
@@ -654,7 +668,7 @@ export const UserDashBoard = () => {
                 </button>
 
                 {/* How to Initiate Auction Button */}
-                <button 
+                <button
                   onClick={() => setShowAuctionVideo(true)}
                   className="bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 border-2 border-purple-200 rounded-2xl p-6 text-center transition-all duration-300 transform hover:scale-105 cursor-pointer"
                 >
@@ -1077,19 +1091,17 @@ export const UserDashBoard = () => {
                             />
                           )}
                           <div className="flex items-center gap-2 mb-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                              listing.condition === 'with-tag' ? 'bg-green-100 text-green-800' :
+                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${listing.condition === 'with-tag' ? 'bg-green-100 text-green-800' :
                               listing.condition === 'without-tag' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-orange-100 text-orange-800'
-                            }`}>
+                                'bg-orange-100 text-orange-800'
+                              }`}>
                               {listing.condition === 'with-tag' ? 'Like New' :
-                               listing.condition === 'without-tag' ? 'Good' : 'Fair'}
+                                listing.condition === 'without-tag' ? 'Good' : 'Fair'}
                             </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                              listing.status === 'available' ? 'bg-blue-100 text-blue-800' :
+                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${listing.status === 'available' ? 'bg-blue-100 text-blue-800' :
                               listing.status === 'sold' ? 'bg-gray-100 text-gray-800' :
-                              'bg-purple-100 text-purple-800'
-                            }`}>
+                                'bg-purple-100 text-purple-800'
+                              }`}>
                               {listing.status}
                             </span>
                           </div>
@@ -1119,15 +1131,15 @@ export const UserDashBoard = () => {
                               </p>
                             </div>
                           </div>
-                          
+
                           <div className="flex gap-2">
-                            <button 
+                            <button
                               onClick={() => handleEditResaleListing(listing)}
                               className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 rounded-xl font-bold text-sm transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-1"
                             >
                               ✏️ Edit
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleDeleteResaleListing(listing._id)}
                               className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 rounded-xl font-bold text-sm transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-1"
                             >
@@ -1262,17 +1274,16 @@ export const UserDashBoard = () => {
                 <div className="p-8 border-2 border-green-100 rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-green-50 to-emerald-50">
                   <div className="text-5xl mb-6">🏺</div>
                   <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 text-gray-900">
-                    {t("dashboard.startAuction") || "Start Auction"}
+                    Request for Auction
                   </h3>
                   <p className="text-gray-600 text-lg sm:text-xl lg:text-2xl mb-8 leading-relaxed">
-                    {t("dashboard.createAuctions") ||
-                      "Create auctions for unique or limited items"}
+                    Submit your request for auction
                   </p>
                   <button
                     className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white py-4 rounded-2xl font-bold text-lg sm:text-xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
-                    onClick={() => handleProtectedRedirect("/auctionform")}
+                    onClick={() => handleProtectedRedirect("/request-auction")}
                   >
-                    {t("dashboard.createAuction") || "Create Auction"}
+                    Request Auction
                   </button>
                 </div>
 
@@ -1358,7 +1369,7 @@ export const UserDashBoard = () => {
                     {t("dashboard.secureLogout") ||
                       "Securely log out of your account"}
                   </p>
-                  <button 
+                  <button
                     onClick={handleLogout}
                     className="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-4 rounded-2xl font-bold text-lg sm:text-xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
                   >
@@ -1644,6 +1655,67 @@ export const UserDashBoard = () => {
               )}
             </div>
           )}
+
+          {/* Request Status Tab */}
+          {activeTab === "request-status" && (
+            <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+              <div className="mb-8">
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 text-gray-900">
+                  My Auction Requests
+                </h3>
+                <p className="text-gray-600 text-lg sm:text-xl">
+                  Track the status of your offline verification and auction pricing
+                </p>
+              </div>
+              
+              {auctionRequests.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {auctionRequests.map((request) => (
+                    <div
+                      key={request._id}
+                      className="border-2 border-purple-100 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-purple-50 to-pink-50"
+                    >
+                      <img
+                        src={request.productImageUrl}
+                        alt={request.productName}
+                        className="w-full h-48 object-cover rounded-xl mb-4 shadow-lg"
+                      />
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-xl text-gray-900 leading-tight">
+                          {request.productName}
+                        </h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          request.status === 'pending' ? 'bg-yellow-200 text-yellow-800' :
+                          request.status === 'approved' ? 'bg-green-200 text-green-800' :
+                          'bg-red-200 text-red-800'
+                        }`}>
+                          {request.status.toUpperCase()}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 text-sm mb-4 line-clamp-2">
+                        {request.productDescription}
+                      </p>
+                      
+                      <div className="bg-white rounded-lg p-3 border border-purple-100">
+                        <p className="text-sm text-gray-600 mb-1">
+                          <span className="font-semibold">Verification:</span> {new Date(request.offlineVerificationDate).toLocaleDateString()}
+                        </p>
+                        {request.status === 'approved' && request.predictedBasePrice && (
+                          <p className="text-sm font-bold text-green-600">
+                            Base Price: ₹{request.predictedBasePrice.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-200">
+                  <p className="text-gray-500 text-xl">No auction requests yet.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -1692,7 +1764,7 @@ export const UserDashBoard = () => {
           <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 border-2 border-gray-300">
             <div className="flex justify-between items-center mb-4 sm:mb-6">
               <h3 className="text-xl sm:text-2xl font-bold">How to Sell on Heartisans</h3>
-              <button 
+              <button
                 onClick={() => setShowSellVideo(false)}
                 className="text-gray-500 hover:text-gray-700 text-2xl sm:text-3xl font-bold"
               >
@@ -1722,7 +1794,7 @@ export const UserDashBoard = () => {
           <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 border-2 border-gray-300">
             <div className="flex justify-between items-center mb-4 sm:mb-6">
               <h3 className="text-xl sm:text-2xl font-bold">How to Start Resale</h3>
-              <button 
+              <button
                 onClick={() => setShowResaleVideo(false)}
                 className="text-gray-500 hover:text-gray-700 text-2xl sm:text-3xl font-bold"
               >
@@ -1752,7 +1824,7 @@ export const UserDashBoard = () => {
           <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 border-2 border-gray-300">
             <div className="flex justify-between items-center mb-4 sm:mb-6">
               <h3 className="text-xl sm:text-2xl font-bold">How to Initiate Auction</h3>
-              <button 
+              <button
                 onClick={() => setShowAuctionVideo(false)}
                 className="text-gray-500 hover:text-gray-700 text-2xl sm:text-3xl font-bold"
               >

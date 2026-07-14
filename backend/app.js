@@ -22,8 +22,8 @@ import sapLegacyRoutes from './routes/sapLegacyRoutes.js';  // Add this import
 import cloudinaryRoutes from './routes/cloudinaryRoutes.js';
 import resaleRoutes from './routes/resaleRoutes.js';
 import storyRoutes from './routes/storyRoutes.js';
+import auctionRequestRoutes from './routes/auctionRequestRoutes.js';
 import { User } from './models/userModel.js';
-
 const app = express();
 
 // Enhanced CORS configuration
@@ -69,7 +69,7 @@ app.use('/api/analytics', sapLegacyRoutes);
 app.use('/api/cloudinary', cloudinaryRoutes);
 app.use('/api/resale', resaleRoutes);
 app.use('/api/stories', storyRoutes);
-
+app.use('/api/auction-requests', auctionRequestRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

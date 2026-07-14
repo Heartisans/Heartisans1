@@ -20,7 +20,7 @@ import { AdminPanel } from "./pages/AdminPanel";
 import { ProductDetails } from "./pages/ProductDetails";
 import { Modal } from "./components/elements/Modal";
 import { SellForm } from "./pages/SellForm";
-import { AuctionForm } from "./pages/AuctionForm";
+import { AuctionRequestForm } from "./pages/AuctionRequestForm";
 import { AuctionDetails } from "./pages/AuctionDetails";
 import { CartPage } from "./pages/CartPage";
 import { CheckoutForm } from "./pages/CheckoutForm";
@@ -211,11 +211,11 @@ export const App = () => {
           element: <CartPage />,
         },
         {
-          path: "/auctionform",
+          path: "/request-auction",
           element: (
             <ProtectedRoute>
               <RouteTransitionWrapper>
-                <AuctionForm />
+                <AuctionRequestForm />
               </RouteTransitionWrapper>
             </ProtectedRoute>
           ),

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { useTranslation } from 'react-i18next'
-import { FaUsers, FaShoppingBag, FaGavel, FaChartBar, FaEye, FaEdit, FaTrash, FaCrown, FaUserShield, FaTimes, FaComments } from 'react-icons/fa'
+import { FaUsers, FaShoppingBag, FaGavel, FaChartBar, FaEye, FaEdit, FaTrash, FaCrown, FaUserShield, FaTimes, FaComments, FaRobot, FaCheck, FaPlay } from 'react-icons/fa'
 import { StoryAdminPanel } from '../components/elements/StoryAdminPanel'
+import { AuctionMindModal } from '../components/elements/AuctionMindModal'
+import { PublishAuctionModal } from '../components/elements/PublishAuctionModal'
 import { useScrollToTop } from "../hooks/useScrollToTop"
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -19,6 +21,10 @@ export const AdminPanel = () => {
   const [users, setUsers] = useState([])
   const [shopCards, setShopCards] = useState([])
   const [auctions, setAuctions] = useState([])
+  const [auctionRequests, setAuctionRequests] = useState([])
+  const [isAuctionModalOpen, setIsAuctionModalOpen] = useState(false)
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false)
+  const [selectedRequest, setSelectedRequest] = useState(null)
   const [carts, setCarts] = useState([])
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -82,15 +88,17 @@ export const AdminPanel = () => {
   const fetchAllData = async () => {
     setLoading(true)
     try {
-      const [usersRes, shopCardsRes, auctionsRes] = await Promise.all([
+      const [usersRes, shopCardsRes, auctionsRes, auctionReqsRes] = await Promise.all([
         axios.get("http://localhost:5000/api/user"), // We'll need to create this endpoint
         axios.get("http://localhost:5000/api/shopcards"),
-        axios.get("http://localhost:5000/api/auctions")
+        axios.get("http://localhost:5000/api/auctions"),
+        axios.get("http://localhost:5000/api/auction-requests")
       ])
 
       setUsers(usersRes.data || [])
       setShopCards(shopCardsRes.data || [])
       setAuctions(auctionsRes.data || [])
+      setAuctionRequests(auctionReqsRes.data.data || auctionReqsRes.data || [])
 
       // Calculate stats
       const userData = usersRes.data || []
@@ -128,6 +136,7 @@ export const AdminPanel = () => {
     { id: 'users', name: t('admin.users'), icon: FaUsers },
     { id: 'products', name: t('admin.products'), icon: FaShoppingBag },
     { id: 'auctions', name: t('admin.auctions'), icon: FaGavel },
+    { id: 'auction-requests', name: 'Auction Requests', icon: FaGavel },
     { id: 'stories', name: 'Stories', icon: FaComments }
   ]
 
@@ -537,6 +546,96 @@ export const AdminPanel = () => {
     )
   }
 
+  // Auction Requests Tab Component
+  const AuctionRequestsTab = () => {
+    return (
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <h3 className="text-3xl font-bold text-gray-800">Auction Requests Management</h3>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-8 py-6 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Product</th>
+                  <th className="px-8 py-6 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Artisan</th>
+                  <th className="px-8 py-6 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Verification Date</th>
+                  <th className="px-8 py-6 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-8 py-6 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {auctionRequests.map((request) => (
+                  <tr key={request._id} className="hover:bg-gray-50">
+                    <td className="px-8 py-6 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <img className="h-14 w-14 rounded-lg object-cover" src={request.productImageUrl} alt="" />
+                        <div className="ml-6">
+                          <div className="text-lg font-semibold text-gray-900">{request.productName}</div>
+                          {request.predictedBasePrice && (
+                            <div className="text-sm font-bold text-green-600 mt-1">
+                              AI Base Price: ₹{request.predictedBasePrice}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 whitespace-nowrap text-lg text-gray-900">{request.userName}</td>
+                    <td className="px-8 py-6 whitespace-nowrap text-lg text-gray-900">
+                      {new Date(request.offlineVerificationDate).toLocaleDateString()}
+                    </td>
+                    <td className="px-8 py-6 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
+                        request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        request.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {request.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6 whitespace-nowrap text-lg font-medium">
+                      {request.status === 'pending' && (
+                        <button 
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setIsAuctionModalOpen(true);
+                          }}
+                          className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 font-semibold"
+                        >
+                          <FaRobot /> Verify & AI Pricing
+                        </button>
+                      )}
+                      {request.status === 'approved' && (
+                        <button 
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setIsPublishModalOpen(true);
+                          }}
+                          className="bg-green-100 text-green-700 hover:bg-green-200 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 font-semibold"
+                        >
+                          <FaPlay /> Start Auction
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {auctionRequests.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="px-8 py-12 text-center text-gray-500 text-lg">
+                      No auction requests found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Stories Tab Component
   const StoriesTab = () => {
     return (
@@ -604,8 +703,41 @@ export const AdminPanel = () => {
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'products' && <ProductsTab />}
         {activeTab === 'auctions' && <AuctionsTab />}
+        {activeTab === 'auction-requests' && <AuctionRequestsTab />}
         {activeTab === 'stories' && <StoriesTab />}
       </div>
+      
+      <AuctionMindModal 
+        isOpen={isAuctionModalOpen} 
+        onClose={() => {
+          setIsAuctionModalOpen(false);
+          setSelectedRequest(null);
+        }} 
+        request={selectedRequest}
+        onApprove={(requestId, prediction) => {
+          // Update the local state to show it's approved and has prediction
+          setAuctionRequests(prev => prev.map(r => 
+            r._id === requestId 
+              ? { ...r, status: 'approved', predictedBasePrice: prediction.base_price, predictedCeilingPrice: prediction.ceiling_price } 
+              : r
+          ));
+        }}
+      />
+
+      <PublishAuctionModal
+        isOpen={isPublishModalOpen}
+        onClose={() => {
+          setIsPublishModalOpen(false);
+          setSelectedRequest(null);
+        }}
+        request={selectedRequest}
+        onPublish={(newAuction) => {
+          setAuctions(prev => [newAuction, ...prev]);
+          setAuctionRequests(prev => prev.map(r =>
+            r._id === selectedRequest._id ? { ...r, status: 'Live' } : r
+          ));
+        }}
+      />
     </div>
   )
 }
