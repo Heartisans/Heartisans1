@@ -19,22 +19,19 @@ export const GoogleAuthButton = ({ isSignUp = false }) => {
         if (result.success) {
           // Redirect to auth handler which will properly route to home
           navigate('/auth-redirect');
-        } else if (result.error === 'Account exists with different login method') {
-          setErrorMessage('An account with this email already exists. Please use your original login method or try a different email.');
-          setIsOpen(true);
         } else {
-          setErrorMessage('An account with this email already exists. Please use your original login method or try a different email.');
+          setErrorMessage(result.error || 'Google authentication failed. Please try again.');
           setIsOpen(true);
         }
       } catch (error) {
         console.error('Google auth error:', error);
-        setErrorMessage('An account with this email already exists. Please use your original login method or try a different email.');
+        setErrorMessage(error.message || 'An unexpected error occurred during Google authentication.');
         setIsOpen(true);
       }
     },
     onError: (error) => {
       console.error('Google login error:', error);
-      setErrorMessage('An account with this email already exists. Please use your original login method or try a different email.');
+      setErrorMessage('Google login popup failed. Please check your Google Client ID configuration.');
       setIsOpen(true);
     },
     flow: 'auth-code',

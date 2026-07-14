@@ -62,7 +62,11 @@ export const sendEmail = async (options) => {
     }
   } catch (error) {
     console.error('Error sending email:', error);
-    throw new Error('Email could not be sent');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⚠️ Development Mode: Ignoring email send failure so you can still use the OTP printed above.');
+    } else {
+      throw new Error('Email could not be sent');
+    }
   }
 };
 

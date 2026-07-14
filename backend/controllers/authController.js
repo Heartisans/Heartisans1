@@ -203,14 +203,18 @@ export const login = async (req, res) => {
 
 export const googleAuth = async (req, res) => {
   try {
+    console.log('--- GOOGLE AUTH REQUEST RECEIVED ---');
     const { code } = req.body;
 
     if (!code) {
+      console.log('Error: No authorization code provided in request body');
       return res.status(400).json({
         status: 'fail',
         message: 'Authorization code not provided'
       });
     }
+
+    console.log('Received auth code:', code.substring(0, 10) + '...');
 
     // Exchange the authorization code for tokens
     const { tokens } = await client.getToken({
