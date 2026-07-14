@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const StoryCard = ({ name, role, image, profileImage, storyImage, story, rating }) => {
+export const StoryCard = ({ id, name, role, image, profileImage, storyImage, story, rating, isAdmin, onDelete }) => {
   // Use profileImage if available, fallback to image, then default
   const displayProfileImage = profileImage || image || '/photos/default_icon.png';
   
@@ -92,7 +92,16 @@ export const StoryCard = ({ name, role, image, profileImage, storyImage, story, 
         <div className="text-sm md:text-base lg:text-lg text-green-600 font-medium bg-green-50 px-3 md:px-4 py-1 md:py-2 rounded-full">
           Verified Review
         </div>
-        {storyImage && (
+        <div className="flex gap-2">
+          {isAdmin && (
+            <button
+              onClick={() => onDelete(id)}
+              className="text-xs md:text-sm text-red-600 hover:text-red-800 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-full transition-all duration-300"
+            >
+              🗑️ Delete Story
+            </button>
+          )}
+          {storyImage && (
           <button
             onClick={() => {
               // Same modal functionality as above
@@ -118,5 +127,6 @@ export const StoryCard = ({ name, role, image, profileImage, storyImage, story, 
         )}
       </div>
     </div>
+  </div>
   );
 };

@@ -17,6 +17,7 @@ import { UserDashBoard } from "./pages/UserDashBoard";
 import SellerDashboard from "./pages/Dashboard/SellerDashboard"; // Missing import
 import { BuyerDashboard } from "./pages/Dashboard/BuyerDashboard"; // Missing import
 import { AdminPanel } from "./pages/AdminPanel";
+import { AdminAuctionForm } from "./pages/AdminAuctionForm";
 import { ProductDetails } from "./pages/ProductDetails";
 import { Modal } from "./components/elements/Modal";
 import { SellForm } from "./pages/SellForm";
@@ -279,6 +280,16 @@ export const App = () => {
           element: (
             <ProtectedRoute>
               <AdminPanel />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/admin/start-auction",
+          element: (
+            <ProtectedRoute>
+              <RouteTransitionWrapper>
+                <AdminAuctionForm />
+              </RouteTransitionWrapper>
             </ProtectedRoute>
           ),
         },

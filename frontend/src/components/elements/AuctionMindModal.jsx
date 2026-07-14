@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { FaRobot, FaTimes, FaCheck, FaExclamationTriangle } from "react-icons/fa";
@@ -8,6 +8,15 @@ export const AuctionMindModal = ({ isOpen, onClose, request, onApprove }) => {
   const [loading, setLoading] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState("");
+  const [adminNotes, setAdminNotes] = useState("");
+
+  useEffect(() => {
+    if (request) {
+      setAdminNotes(request.adminNotes || "");
+      setPrediction(null);
+      setError("");
+    }
+  }, [request]);
 
   if (!isOpen || !request) return null;
 
@@ -42,12 +51,13 @@ export const AuctionMindModal = ({ isOpen, onClose, request, onApprove }) => {
       if (!prediction) return;
       
       await axios.put(`http://localhost:5000/api/auction-requests/${request._id}/status`, {
-        status: "approved",
+        status: "Date Accepted",
         predictedBasePrice: prediction.base_price,
-        predictedCeilingPrice: prediction.ceiling_price
+        predictedCeilingPrice: prediction.ceiling_price,
+        adminNotes
       });
       
-      onApprove(request._id, prediction);
+      onApprove(request._id, { ...prediction, status: "Date Accepted", adminNotes });
       onClose();
     } catch (err) {
       console.error(err);
@@ -55,9 +65,24 @@ export const AuctionMindModal = ({ isOpen, onClose, request, onApprove }) => {
     }
   };
 
+  const handleReject = async () => {
+    try {
+      await axios.put(`http://localhost:5000/api/auction-requests/${request._id}/status`, {
+        status: "Rejected",
+        adminNotes
+      });
+      
+      onApprove(request._id, { status: "Rejected", adminNotes });
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to reject request");
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-purple-200 flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden border border-purple-200 flex flex-col max-h-[90vh]">
         
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-700 to-indigo-800 p-6 flex justify-between items-center text-white shrink-0">
@@ -82,24 +107,58 @@ export const AuctionMindModal = ({ isOpen, onClose, request, onApprove }) => {
         <div className="p-8 space-y-6 overflow-y-auto">
           
           {/* Request Details */}
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 flex gap-6">
+          <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 flex flex-col md:flex-row gap-8">
             <img 
               src={request.productImageUrl} 
               alt={request.productName}
-              className="w-32 h-32 object-cover rounded-lg shadow-sm border border-gray-200"
+              className="w-full md:w-56 h-56 object-cover rounded-xl shadow-md border border-gray-300 shrink-0"
             />
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-1">{request.productName}</h3>
-              <p className="text-sm text-gray-500 mb-3">By {request.userName}</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div><span className="font-medium text-gray-700">Material:</span> {request.productMaterial || "N/A"}</div>
-                <div><span className="font-medium text-gray-700">Weight:</span> {request.productWeight || "N/A"}</div>
-                <div className="col-span-2">
-                  <span className="font-medium text-gray-700">Verification Date: </span>
-                  {new Date(request.offlineVerificationDate).toLocaleString()}
+            <div className="flex-1 flex flex-col">
+              <h3 className="text-3xl font-bold text-gray-900 mb-1">{request.productName}</h3>
+              <p className="text-sm font-bold text-purple-600 mb-4 bg-purple-100 inline-block px-3 py-1 rounded-full w-fit border border-purple-200">
+                Artisan: {request.userName}
+              </p>
+              
+              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-4">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Description</h4>
+                <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
+                  {request.productDescription || "No description provided."}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div>
+                  <span className="font-bold text-gray-500 text-xs uppercase tracking-wider block mb-1">Material</span> 
+                  <span className="text-gray-900 font-medium">{request.productMaterial || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="font-bold text-gray-500 text-xs uppercase tracking-wider block mb-1">Weight</span> 
+                  <span className="text-gray-900 font-medium">{request.productWeight ? `${request.productWeight}g` : "N/A"}</span>
+                </div>
+                <div>
+                  <span className="font-bold text-gray-500 text-xs uppercase tracking-wider block mb-1">Color</span> 
+                  <span className="text-gray-900 font-medium">{request.productColor || "N/A"}</span>
+                </div>
+                <div className="col-span-2 sm:col-span-3 pt-3 mt-1 border-t border-gray-100 flex items-center gap-3">
+                  <span className="font-bold text-gray-500 text-xs uppercase tracking-wider">Verification Date</span>
+                  <span className="text-purple-700 bg-purple-50 px-3 py-1 rounded-md text-sm font-bold border border-purple-100">
+                    {new Date(request.offlineVerificationDate).toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Admin Remarks */}
+          <div className="bg-white rounded-xl p-5 border border-gray-200">
+            <label className="block text-gray-700 font-bold mb-2">Admin Remarks (Optional)</label>
+            <textarea
+              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+              rows="3"
+              placeholder="Add your remarks or reasons for rejection/approval here..."
+              value={adminNotes}
+              onChange={(e) => setAdminNotes(e.target.value)}
+            ></textarea>
           </div>
 
           {/* AI Controls */}
@@ -160,22 +219,32 @@ export const AuctionMindModal = ({ isOpen, onClose, request, onApprove }) => {
         </div>
 
         {/* Footer Actions */}
-        {prediction && (
-          <div className="bg-gray-50 p-6 border-t border-gray-200 flex justify-end gap-4 shrink-0">
-            <button
-              onClick={() => setPrediction(null)}
-              className="px-6 py-3 rounded-xl font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
-            >
-              Recalculate
-            </button>
-            <button
-              onClick={handleApprove}
-              className="px-8 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-            >
-              <FaCheck /> Approve Request
-            </button>
+        <div className="bg-gray-50 p-6 border-t border-gray-200 flex justify-between items-center shrink-0">
+          <button
+            onClick={handleReject}
+            className="px-6 py-3 rounded-xl font-medium text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors"
+          >
+            Reject Request
+          </button>
+          <div className="flex gap-4">
+            {prediction && (
+              <>
+                <button
+                  onClick={() => setPrediction(null)}
+                  className="px-6 py-3 rounded-xl font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  Recalculate
+                </button>
+                <button
+                  onClick={handleApprove}
+                  className="px-8 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                >
+                  <FaCheck /> Approve Request
+                </button>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

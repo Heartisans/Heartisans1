@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { ShareExperienceForm } from '../components/elements/ShareExperienceForm';
 import { useScrollToTop } from '../hooks/useScrollToTop';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 export const StoriesPage = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -46,6 +48,23 @@ export const StoriesPage = () => {
     setIsFormOpen(false);
     // Refresh stories when form is closed (in case a new story was added)
     fetchStories();
+  };
+
+  const handleDeleteStory = async (storyId) => {
+    if (window.confirm('Are you sure you want to delete this story?')) {
+      try {
+        const token = localStorage.getItem('authToken');
+        const config = {
+          headers: { Authorization: `Bearer ${token}` }
+        };
+        await axios.delete(`http://localhost:5000/api/stories/admin/${storyId}/reject`, config);
+        // Remove from UI
+        setStories(stories.filter(s => (s.id || s._id) !== storyId));
+      } catch (err) {
+        console.error('Error deleting story:', err);
+        alert('Failed to delete story');
+      }
+    }
   };
 
   return (
@@ -141,6 +160,7 @@ export const StoriesPage = () => {
                 {stories.map((story, index) => (
                   <div key={story.id || story._id} className={`transform transition-all duration-300 hover:scale-[1.02] ${index % 2 === 0 ? 'lg:pr-8' : 'lg:pl-8'}`}>
                     <StoryCard
+                      id={story.id || story._id}
                       name={story.name}
                       role={story.role}
                       image={story.image || "https://images.unsplash.com/photo-1494790108755-2616b612b647?w=150&h=150&fit=crop&crop=face"}
@@ -148,6 +168,8 @@ export const StoriesPage = () => {
                       storyImage={story.storyImage}
                       story={story.story}
                       rating={story.rating}
+                      isAdmin={user?.isAdmin}
+                      onDelete={handleDeleteStory}
                     />
                   </div>
                 ))}

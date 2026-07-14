@@ -198,6 +198,24 @@ export const UserDashBoard = () => {
 
   useScrollToTop();
 
+  // Smart scroll positioning when switching tabs
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const tabsElement = document.getElementById("dashboard-tabs");
+      if (tabsElement) {
+        const rect = tabsElement.getBoundingClientRect();
+        // If the top of the tabs is above the viewport (scrolled past it)
+        if (rect.top < 0) {
+          const y = rect.top + window.scrollY - 80; // 80px offset for the fixed navbar
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
+
   useEffect(() => {
     if (isSignedIn && isInitialLoad) {
       setIsInitialLoad(false);
@@ -575,7 +593,7 @@ export const UserDashBoard = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="bg-white/90 backdrop-blur-sm shadow-xl border-b border-green-100">
+        <div id="dashboard-tabs" className="bg-white/90 backdrop-blur-sm shadow-xl border-b border-green-100 sticky top-[64px] z-40">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex space-x-8">
               {[
@@ -760,12 +778,21 @@ export const UserDashBoard = () => {
                     {t("dashboard.quickActions") || "Quick Actions"}
                   </h3>
                   <div className="flex gap-6 flex-wrap">
-                    <button
-                      className="px-8 py-4 rounded-2xl font-bold text-xl sm:text-2xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl cursor-pointer"
-                      onClick={() => handleProtectedRedirect("/auctionform")}
-                    >
-                      {t("dashboard.startAuction")}
-                    </button>
+                    {user?.isAdmin ? (
+                      <button
+                        className="px-8 py-4 rounded-2xl font-bold text-xl sm:text-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl cursor-pointer"
+                        onClick={() => handleProtectedRedirect("/admin/start-auction")}
+                      >
+                        Start Auction
+                      </button>
+                    ) : (
+                      <button
+                        className="px-8 py-4 rounded-2xl font-bold text-xl sm:text-2xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl cursor-pointer"
+                        onClick={() => handleProtectedRedirect("/request-auction")}
+                      >
+                        Request for Auction
+                      </button>
+                    )}
                     <button
                       className="px-8 py-4 rounded-2xl font-bold text-xl sm:text-2xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl cursor-pointer"
                       onClick={() => handleProtectedRedirect("/sellform")}

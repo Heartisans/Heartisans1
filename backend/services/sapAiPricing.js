@@ -328,7 +328,61 @@ Execute comprehensive SAP Business AI analysis and return JSON response:`;
             // Escape JSON for command line argument
             const jsonArg = JSON.stringify(productData).replace(/"/g, '\\"');
             
-            const { stdout, stderr } = await execPromise(`"${pythonPath}" "${scriptPath}" "${jsonArg}"`);
+            let stdout, stderr;
+            try {
+                const pythonPromise = execPromise(`"${pythonPath}" "${scriptPath}" "${jsonArg}"`);
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('PYTHON_TIMEOUT')), 60000)
+                );
+                
+                const execResult = await Promise.race([pythonPromise, timeoutPromise]);
+                stdout = execResult.stdout;
+                stderr = execResult.stderr;
+            } catch (err) {
+                if (err.message === 'PYTHON_TIMEOUT') {
+                    console.warn('⚠️ Python prediction timed out after 60s. Falling back to Gemini 2.5 Flash...');
+                    if (process.env.GEMINI_API_KEY) {
+                        try {
+                            const geminiRes = await axios.post(
+                                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+                                {
+                                    system_instruction: {
+                                        parts: { text: "You are an expert artisan product pricing estimator. Given the product details, output a JSON object containing exactly two keys: 'base_price' (integer, optimal starting price in INR) and 'ceiling_price' (integer, maximum expected selling price in INR)." }
+                                    },
+                                    contents: [{
+                                        parts: [{ text: JSON.stringify(productData) }]
+                                    }],
+                                    generationConfig: {
+                                        temperature: 0,
+                                        response_mime_type: "application/json"
+                                    }
+                                }
+                            );
+                            
+                            const textResponse = geminiRes.data.candidates[0].content.parts[0].text;
+                            const parsed = JSON.parse(textResponse);
+                            
+                            console.log('✅ Gemini Fallback Price prediction completed successfully');
+                            
+                            return {
+                                suggestedPrice: parsed.base_price,
+                                priceRange: { min: parsed.base_price, max: parsed.ceiling_price },
+                                confidence: 85,
+                                isRealSAP: false,
+                                marketFactors: ['Gemini 2.5 Flash Applied'],
+                                aiReasoning: 'Predicted using Gemini fallback after python timeout.'
+                            };
+                        } catch (geminiErr) {
+                            console.error('❌ Gemini fallback also failed:', geminiErr.response?.data || geminiErr.message);
+                            throw err; // throw original timeout to trigger Groq fallback
+                        }
+                    } else {
+                        console.warn('⚠️ GEMINI_API_KEY not found in env, skipping Gemini fallback');
+                        throw err; // throw to trigger Groq fallback
+                    }
+                }
+                throw err;
+            }
             
             if (stderr) {
                 console.warn('⚠️ Python stderr:', stderr);

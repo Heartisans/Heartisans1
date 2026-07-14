@@ -88,15 +88,18 @@ export const Resale = () => {
     try {
       const response = await axios.post("http://localhost:5000/api/predict-price", {
         productName: resaleForm.productName,
-        productCategory: resaleForm.category,
-        productMaterial: "Handcrafted materials",
-        isHandmade: true,
-        region: "India",
-        listingType: "resale"
+        productDescription: resaleForm.description,
+        productMaterial: resaleForm.material,
+        productWeight: resaleForm.weight,
+        productColor: resaleForm.color
       });
 
       if (response.data.success) {
-        setPricePrediction(response.data.data);
+        const predictionData = response.data.data;
+        setPricePrediction({
+          base_price: predictionData.suggestedPrice,
+          ceiling_price: predictionData.priceRange?.max || predictionData.suggestedPrice * 1.5
+        });
         setShowPricingInsights(true);
       } else {
         throw new Error(response.data.error || 'Failed to generate price prediction');
@@ -654,47 +657,33 @@ export const Resale = () => {
 
                 {/* Price Prediction Results */}
                 {showPricingInsights && pricePrediction && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
-                    <h3 className="text-lg font-bold text-green-800 mb-4 flex items-center">
+                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-200 relative overflow-hidden">
+                    <h3 className="text-lg font-bold text-purple-900 mb-4 flex items-center">
                       <span className="mr-2">📊</span>
-                      SAP AI Pricing Intelligence
+                      AI Pricing Intelligence
                     </h3>
                     
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="bg-white rounded-lg p-4 border border-green-200">
-                        <h4 className="font-semibold text-green-700 mb-2">Market Price Range</h4>
-                        <p className="text-2xl font-bold text-green-800">
-                          ₹{pricePrediction.priceRange?.min?.toLocaleString()} - ₹{pricePrediction.priceRange?.max?.toLocaleString()}
+                    <div className="grid md:grid-cols-2 gap-4 relative z-10">
+                      <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                        <p className="text-gray-500 text-sm font-medium mb-1">Recommended Base Price</p>
+                        <p className="text-3xl font-bold text-green-600">
+                          ₹{pricePrediction.base_price?.toLocaleString()}
                         </p>
-                        <p className="text-sm text-green-600 mt-1">
-                          Confidence: {pricePrediction.confidence}%
+                        <p className="text-xs text-gray-400 mt-2">
+                          Optimal starting point
                         </p>
                       </div>
                       
-                      <div className="bg-white rounded-lg p-4 border border-green-200">
-                        <h4 className="font-semibold text-green-700 mb-2">Suggested Price</h4>
-                        <p className="text-2xl font-bold text-green-800">
-                          ₹{pricePrediction.suggestedPrice?.toLocaleString()}
+                      <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                        <p className="text-gray-500 text-sm font-medium mb-1">Expected Ceiling Price</p>
+                        <p className="text-3xl font-bold text-purple-600">
+                          ₹{pricePrediction.ceiling_price?.toLocaleString()}
                         </p>
-                        <p className="text-sm text-green-600 mt-1">
-                          Market Position: {pricePrediction.marketPosition}
+                        <p className="text-xs text-gray-400 mt-2">
+                          Projected final value
                         </p>
                       </div>
                     </div>
-
-                    {pricePrediction.recommendations && (
-                      <div className="mt-4">
-                        <h4 className="font-semibold text-green-700 mb-2">SAP AI Recommendations</h4>
-                        <ul className="space-y-1">
-                          {pricePrediction.recommendations.slice(0, 3).map((rec, index) => (
-                            <li key={index} className="text-sm text-green-600 flex items-start">
-                              <span className="mr-2">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </div>
                 )}
 

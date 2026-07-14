@@ -36,6 +36,23 @@ export const AdminPanel = () => {
 
   useScrollToTop();
 
+  // Smart scroll positioning when switching tabs
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const tabsElement = document.getElementById("admin-dashboard-tabs");
+      if (tabsElement) {
+        const rect = tabsElement.getBoundingClientRect();
+        // If the top of the tabs is above the viewport (scrolled past it)
+        if (rect.top < 0) {
+          const y = rect.top + window.scrollY - 80; // 80px offset for the fixed navbar
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
   // Check authentication and admin status
   useEffect(() => {
     if (isLoaded) {
@@ -588,26 +605,29 @@ export const AdminPanel = () => {
                     </td>
                     <td className="px-8 py-6 whitespace-nowrap">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
-                        request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        request.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        request.status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        request.status?.toLowerCase() === 'date accepted' || request.status?.toLowerCase() === 'approved' ? 'bg-green-100 text-green-800' :
+                        request.status?.toLowerCase() === 'live' ? 'bg-blue-100 text-blue-800' :
                         'bg-red-100 text-red-800'
                       }`}>
-                        {request.status.toUpperCase()}
+                        {request.status ? request.status.toUpperCase() : 'UNKNOWN'}
                       </span>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap text-lg font-medium">
-                      {request.status === 'pending' && (
-                        <button 
-                          onClick={() => {
-                            setSelectedRequest(request);
-                            setIsAuctionModalOpen(true);
-                          }}
-                          className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 font-semibold"
-                        >
-                          <FaRobot /> Verify & AI Pricing
-                        </button>
+                    <td className="px-8 py-6 whitespace-nowrap text-lg font-medium flex gap-2">
+                      {request.status?.toLowerCase() === 'pending' && (
+                        <>
+                          <button 
+                            onClick={() => {
+                              setSelectedRequest(request);
+                              setIsAuctionModalOpen(true);
+                            }}
+                            className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 font-semibold"
+                          >
+                            <FaRobot /> View & Verify
+                          </button>
+                        </>
                       )}
-                      {request.status === 'approved' && (
+                      {(request.status?.toLowerCase() === 'date accepted' || request.status?.toLowerCase() === 'approved') && (
                         <button 
                           onClick={() => {
                             setSelectedRequest(request);
@@ -671,9 +691,9 @@ export const AdminPanel = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b">
+      <div id="admin-dashboard-tabs" className="bg-white border-b sticky top-[64px] z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-12 py-6">
+          <nav className="flex space-x-12 py-6 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
@@ -714,11 +734,17 @@ export const AdminPanel = () => {
           setSelectedRequest(null);
         }} 
         request={selectedRequest}
-        onApprove={(requestId, prediction) => {
-          // Update the local state to show it's approved and has prediction
+        onApprove={(requestId, result) => {
+          // Update the local state to show it's approved/rejected and has prediction
           setAuctionRequests(prev => prev.map(r => 
             r._id === requestId 
-              ? { ...r, status: 'approved', predictedBasePrice: prediction.base_price, predictedCeilingPrice: prediction.ceiling_price } 
+              ? { 
+                  ...r, 
+                  status: result.status || 'Date Accepted', 
+                  predictedBasePrice: result.base_price, 
+                  predictedCeilingPrice: result.ceiling_price,
+                  adminNotes: result.adminNotes
+                } 
               : r
           ));
         }}
